@@ -81,11 +81,14 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs[None]
             
         # TODO return the action that the policy prescribes
-        raise self.forward(observation).sample()
+        observation = ptu.from_numpy(observation)
+        return ptu.to_numpy(self.forward(observation).sample())
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
-        ex_action = self.forward(observations).sample()
+        observations = ptu.from_numpy(observations)
+        actions = ptu.from_numpy(actions)
+        ex_action = self.forward(observations).rsample()
         loss = F.mse_loss(ex_action, actions, reduction='mean')
         loss.backward()
         self.optimizer.step()
@@ -102,7 +105,7 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             return distributions.Categorical(logits=logits)
         else:
             mean = self.mean_net(observation)
-            return distributions.Normal(mean, self.logstd)
+            return distributions.Normal(mean, torch.exp(self.logstd))
 
 
 #####################################################
