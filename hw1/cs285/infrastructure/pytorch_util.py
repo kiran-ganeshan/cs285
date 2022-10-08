@@ -53,6 +53,7 @@ def build_mlp(
         out_size = output_size if i == n_layers - 1 else size
         act = output_activation if i == n_layers - 1 else activation
         layers.extend([nn.Linear(in_size, out_size), act])
+    print(layers)
     return nn.Sequential(*tuple(layers))
 
 

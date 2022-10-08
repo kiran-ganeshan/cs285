@@ -88,8 +88,8 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     def update(self, observations, actions, **kwargs):
         observations = ptu.from_numpy(observations)
         actions = ptu.from_numpy(actions)
-        ex_action = self.forward(observations).rsample()
-        loss = F.mse_loss(ex_action, actions, reduction='mean')
+        loss = -self.forward(observations).log_prob(actions).mean()
+        self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
         return loss
