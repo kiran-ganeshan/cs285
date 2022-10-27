@@ -4,7 +4,6 @@ from torch import optim
 
 from cs285.infrastructure import pytorch_util as ptu
 
-
 class BootstrappedContinuousCritic(nn.Module, BaseCritic):
     """
         Notes on notation:
@@ -85,5 +84,16 @@ class BootstrappedContinuousCritic(nn.Module, BaseCritic):
         #       to 0) when a terminal state is reached
         # HINT: make sure to squeeze the output of the critic_network to ensure
         #       that its dimensions match the reward
-
-        return loss.item()
+        obs = ptu.from_numpy(ob_no)
+        total_loss = 0.
+        for i in range(self.num_grad_steps_per_target_update * self.num_target_updates):
+            if i % self.num_grad_steps_per_target_update == 0:
+                Vnext = self.forward_np(next_ob_no)
+                target = ptu.from_numpy(reward_n  + (1. - terminal_n) * self.gamma * Vnext)
+            V = self.forward(obs)
+            loss = self.loss(V, target)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+            total_loss += loss
+        return total_loss.item()

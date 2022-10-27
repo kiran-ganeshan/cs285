@@ -65,9 +65,9 @@ def main():
     parser.add_argument('--num_agent_train_steps_per_iter', type=int, default=1)
     parser.add_argument('--num_critic_updates_per_agent_update', type=int, default=1)
     parser.add_argument('--num_actor_updates_per_agent_update', type=int, default=1)
-    parser.add_argument('--actor_update_frequency', type=int, default=1)
+    parser.add_argument('--actor_update_frequency', type=int, default=10)
     parser.add_argument('--critic_target_update_frequency', type=int, default=1)
-    parser.add_argument('--batch_size', '-b', type=int, default=1000) #steps collected per train iteration
+    parser.add_argument('--batch_size', '-b', type=int, default=5000) #steps collected per train iteration
     parser.add_argument('--eval_batch_size', '-eb', type=int, default=400) #steps collected per eval iteration
     parser.add_argument('--train_batch_size', '-tb', type=int, default=256) ##steps used per gradient step
 

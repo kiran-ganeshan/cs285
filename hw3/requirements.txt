@@ -12,3 +12,4 @@ ipdb==0.13.9
 swig==4.0.2
 box2d-py==2.3.8
 pyglet==1.5.26
+python cs285/scripts/run_hw3_dqn.py --env_name LunarLander-v3 --exp_name q2_doubledqn_1 --double_q --seed 1 --which_gpu 6

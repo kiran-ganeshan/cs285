@@ -36,7 +36,7 @@ def register_custom_envs():
         )
 
 
-def get_env_kwargs(env_name):
+def get_env_kwargs(env_name, exp_option='linear'):
     if env_name in ['MsPacman-v0', 'PongNoFrameskip-v4']:
         kwargs = {
             'learning_starts': 50000,
@@ -72,7 +72,14 @@ def get_env_kwargs(env_name):
             'num_timesteps': 500000,
             'env_wrappers': lunar_empty_wrapper
         }
-        kwargs['exploration_schedule'] = lander_exploration_schedule(kwargs['num_timesteps'])
+        if 'lin' in exp_option:
+            sched = lander_exploration_schedule
+        elif 'const' in exp_option:
+            sched = lander_exploration_schedule_constant
+        else:
+            assert 'exp' in exp_option, f"exp_option={exp_option} must contain \'lin\', \'const\', or \'exp\'"
+            sched = lander_exploration_schedule_exp
+        kwargs['exploration_schedule'] = sched(kwargs['num_timesteps'])
 
     else:
         raise NotImplementedError
@@ -172,8 +179,21 @@ def lander_exploration_schedule(num_timesteps):
     return PiecewiseSchedule(
         [
             (0, 1),
-            (num_timesteps * 0.1, 0.02),
-        ], outside_value=0.02
+            (num_timesteps * 0.1, 0.1),
+        ], outside_value=0.1
+    )
+    
+def lander_exploration_schedule_constant(num_timesteps):
+    return ConstantSchedule(0.1)
+
+def lander_exploration_schedule_exp(num_timesteps):
+    return PiecewiseSchedule(
+        [
+            (0, 1),
+            (num_timesteps * 0.1, 0.1)
+        ], 
+        interpolation=exponential_interpolation,
+        outside_value=0.1
     )
 
 
@@ -212,6 +232,9 @@ class ConstantSchedule(object):
 
 def linear_interpolation(l, r, alpha):
     return l + alpha * (r - l)
+
+def exponential_interpolation(l, r, alpha):
+    return l * pow(r / l, alpha)
 
 
 class PiecewiseSchedule(object):
