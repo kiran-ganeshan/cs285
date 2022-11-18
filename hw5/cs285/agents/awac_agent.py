@@ -101,18 +101,14 @@ class AWACAgent(DQNAgent):
             explore_weight = 1
             exploit_weight = 0
 
-            # Run Exploration Model #
-            # TODO: Evaluate the exploration model on s to get the exploration bonus
-            # HINT: Normalize the exploration bonus, as RND values vary highly in magnitude.
-            # HINT: Normalize using self.running_rnd_rew_std, and keep an exponential moving average
-            # of self.running_rnd_rew_std using self.rnd_gamma.
-            expl_bonus = self.exploration_model.forward_np(ob_no)
-            self.running_rnd_rew_std = self.rnd_gamma * self.running_rnd_rew_std \
-                                        + (1. - self.rnd_gamma) * expl_bonus.std()
-            expl_bonus = normalize(expl_bonus, expl_bonus.mean(), self.running_rnd_rew_std)
-            
-            # Reward Calculations #
-            # TODO: Calculate mixed rewards, which will be passed into the exploration critic
+
+            # TODO: Run Exploration Model #
+            # Evaluate the exploration model on s' to get the exploration bonus
+            # HINT: Normalize the exploration bonus, as RND values vary highly in magnitude
+            expl_bonus = None
+
+            # TODO: Reward Calculations #
+            # Calculate mixed rewards, which will be passed into the exploration critic
             # HINT: See doc for definition of mixed_reward
             mixed_reward = explore_weight * expl_bonus + exploit_weight * re_n
 
