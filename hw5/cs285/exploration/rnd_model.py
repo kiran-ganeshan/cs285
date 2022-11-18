@@ -37,7 +37,7 @@ class RNDModel(nn.Module, BaseExplorationModel):
     def forward(self, ob_no):
         target = self.f(ob_no).detach()
         pred = self.f_hat(ob_no)
-        return ((pred - target) ** 2).sum(-1)
+        return torch.sqrt(((pred - target) ** 2).sum(-1))
 
     def forward_np(self, ob_no):
         ob_no = ptu.from_numpy(ob_no)

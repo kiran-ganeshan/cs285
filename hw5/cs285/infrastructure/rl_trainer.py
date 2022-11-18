@@ -316,7 +316,7 @@ class RL_Trainer(object):
         for key, value in logs.items():
             print('{} : {}'.format(key, value))
             self.logger.log_scalar(value, key, self.agent.t)
-        print('Done logging...\n\n')
+        print('Done DQN logging...\n\n')
 
         self.logger.flush()
 
