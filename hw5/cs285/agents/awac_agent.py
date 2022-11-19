@@ -69,16 +69,16 @@ class AWACAgent(DQNAgent):
         # HINT: You may find it helpful to utilze get_qvals defined above
         if self.agent_params['discrete']:
             for i in range(self.agent_params['ac_dim']):
-                ac = torch.nn.functional.one_hot(torch.tensor(i).to(torch.long), self.agent_params['ac_dim'])
+                ac = torch.tensor(i).to(torch.long).unsqueeze().repeat(ob_no.shape[0])
                 vals.append(self.get_qvals(self.actor.critic, ob_no, ac))
         else:
             for _ in range(n_actions):
                 ac = dist.sample()
                 vals.append(self.get_qvals(self.actor.critic, ob_no, ac))
-        v_pi = None
+        v_pi = np.mean(vals)
 
         # TODO Calculate Q-Values
-        q_vals = None
+        q_vals = self.get_qvals(self.actor.critic, ob_no, ac)
         # TODO Calculate the Advantage using q_vals and v_pi  
         return q_vals - v_pi
 
@@ -98,14 +98,14 @@ class AWACAgent(DQNAgent):
             # TODO: Get the current explore reward weight and exploit reward weight
             #       using the schedule's passed in (see __init__)
             # COMMENT: Until part 3, explore_weight = 1, and exploit_weight = 0
-            explore_weight = 1
-            exploit_weight = 0
+            explore_weight = self.explore_weight_schedule.value(self.t)
+            exploit_weight = self.exploit_weight_schedule.value(self.t)
 
 
             # TODO: Run Exploration Model #
-            # Evaluate the exploration model on s' to get the exploration bonus
+            # Evaluate the exploration model on s to get the exploration bonus
             # HINT: Normalize the exploration bonus, as RND values vary highly in magnitude
-            expl_bonus = None
+            expl_bonus = self.exploration_model.forward_np(ob_no)
 
             # TODO: Reward Calculations #
             # Calculate mixed rewards, which will be passed into the exploration critic
@@ -133,12 +133,13 @@ class AWACAgent(DQNAgent):
             # 1): Estimate the advantage
             # 2): Calculate the awac actor loss
             advantage = self.estimate_advantage(ob_no, ac_na, re_n, next_ob_no, terminal_n)
-            actor_loss = None
+            actor_loss = self.eval_policy.update(ob_no, ac_na, advantage)
 
             # TODO: Update Target Networks #
             if self.num_param_updates % self.target_update_freq == 0:
                 #  Update the exploitation and exploration target networks
-                pass
+                self.exploration_critic.update_target_network()
+                self.exploitation_critic.update_target_network()
 
             # Logging #
             log['Exploration Critic Loss'] = exploration_critic_loss['Training Loss']
@@ -146,7 +147,7 @@ class AWACAgent(DQNAgent):
             log['Exploration Model Loss'] = expl_model_loss
 
             # Uncomment these lines after completing awac
-            # log['Actor Loss'] = actor_loss
+            log['Actor Loss'] = actor_loss
 
             self.num_param_updates += 1
 

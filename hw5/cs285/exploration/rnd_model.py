@@ -5,12 +5,12 @@ from torch import nn
 import torch
 
 def init_method_1(model):
-    model.weight.data.uniform_()
-    model.bias.data.uniform_()
-
-def init_method_2(model):
     model.weight.data.normal_()
     model.bias.data.normal_()
+
+def init_method_2(model):
+    model.weight.data.uniform_()
+    model.bias.data.uniform_()
 
 
 class RNDModel(nn.Module, BaseExplorationModel):
@@ -37,7 +37,8 @@ class RNDModel(nn.Module, BaseExplorationModel):
     def forward(self, ob_no):
         target = self.f(ob_no).detach()
         pred = self.f_hat(ob_no)
-        return torch.sqrt(((pred - target) ** 2).sum(-1))
+        error = ((pred - target) ** 2).mean(-1)
+        return torch.sqrt(error)
 
     def forward_np(self, ob_no):
         ob_no = ptu.from_numpy(ob_no)
@@ -47,7 +48,7 @@ class RNDModel(nn.Module, BaseExplorationModel):
     def update(self, ob_no):
         # <DONE>: Update f_hat using ob_no
         ob_no = ptu.from_numpy(ob_no)
-        error = self.forward(ob_no).mean()
+        error = self(ob_no).mean()
         self.optimizer.zero_grad()
         error.backward()
         self.optimizer.step()
