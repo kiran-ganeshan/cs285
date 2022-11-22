@@ -100,6 +100,7 @@ class CQLCritic(BaseCritic):
         loss.backward()
         utils.clip_grad_value_(self.q_net.parameters(), self.grad_norm_clipping)
         self.optimizer.step()
+        self.learning_rate_scheduler.step()
 
         info = {'Training Loss': ptu.to_numpy(loss)}
 

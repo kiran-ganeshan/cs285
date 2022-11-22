@@ -5,12 +5,12 @@ from torch import nn
 import torch
 
 def init_method_1(model):
-    model.weight.data.normal_()
-    model.bias.data.normal_()
-
-def init_method_2(model):
     model.weight.data.uniform_()
     model.bias.data.uniform_()
+
+def init_method_2(model):
+    model.weight.data.normal_()
+    model.bias.data.normal_()
 
 
 class RNDModel(nn.Module, BaseExplorationModel):
@@ -35,10 +35,14 @@ class RNDModel(nn.Module, BaseExplorationModel):
         )
 
     def forward(self, ob_no):
-        target = self.f(ob_no).detach()
+        target = self.f(ob_no)
         pred = self.f_hat(ob_no)
-        error = ((pred - target) ** 2).mean(-1)
-        return torch.sqrt(error)
+        print(f'\n\nob_no.shape: {ob_no.shape}\nob_no[:5, :]: {ob_no[:5, :]}')
+        print(f'pred.shape: {pred.shape}\npred[:5, :]: {pred[:5, :]}')
+        print(f'target.shape: {target.shape}\ntarget[:5, :]: {target[:5, :]}')
+        error = torch.norm(pred - target.detach(), dim=-1)
+        print(f'error.shape: {error.shape}\nerror[:5]: {error[:5]}')
+        return error
 
     def forward_np(self, ob_no):
         ob_no = ptu.from_numpy(ob_no)
