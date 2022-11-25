@@ -41,7 +41,7 @@ class DQNCritic(BaseCritic):
         self.q_net.to(ptu.device)
         self.q_net_target.to(ptu.device)
 
-    def update(self, ob_no, ac_na, next_ob_no, reward_n, terminal_n, return_torch=False):
+    def update(self, ob_no, ac_na, next_ob_no, reward_n, terminal_n, perform_update=True):
         """
             Update the parameters of the critic.
             let sum_of_path_lengths be the sum of the lengths of the paths sampled from
@@ -77,16 +77,16 @@ class DQNCritic(BaseCritic):
         target = target.detach()
         loss = self.loss(q_t_values, target)
     
-        self.optimizer.zero_grad()
-        loss.backward()
-        utils.clip_grad_value_(self.q_net.parameters(), self.grad_norm_clipping)
-        self.optimizer.step()
+        if perform_update:
+            self.optimizer.zero_grad()
+            loss.backward()
+            utils.clip_grad_value_(self.q_net.parameters(), self.grad_norm_clipping)
+            self.optimizer.step()
+            self.learning_rate_scheduler.step()
+            return {'Training Loss': ptu.to_numpy(loss)}
+        else:
+            return ptu.to_numpy((q_t_values - target) ** 2)
         
-        self.learning_rate_scheduler.step()
-        
-        if return_torch:
-            return loss
-        return {'Training Loss': ptu.to_numpy(loss)}
 
     ####################################
     ####################################

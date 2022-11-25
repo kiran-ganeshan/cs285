@@ -401,16 +401,35 @@ class RL_Trainer(object):
         plt.colorbar()
         plt.title('State Density')
         self.fig.savefig(filepath('state_density'), bbox_inches='tight')
+        if itr == 10000:
+            file = filepath('state_density')
+            self.fig.savefig(file[:-4] + '_10000' + file[-4:], bbox_inches='tight')
 
         plt.clf()
         ii, jj = np.meshgrid(np.linspace(0, 1), np.linspace(0, 1))
         obs = np.stack([ii.flatten(), jj.flatten()], axis=1)
-        density = self.agent.exploration_model.forward_np(obs)
+        if self.params['use_td']:
+            action = self.agent.exploration_model.qa_values(obs).argmax(-1)
+            next_obs, re, terminal = [], [], []
+            for ac in action:
+                next_ob, reward, done, info = self.env.step(ac)
+                next_obs.append(np.expand_dims(next_ob, 0))
+                re.append(reward)
+                terminal.append(done)
+            next_obs = np.concatenate(next_obs, 0)
+            re = np.array(re)
+            terminal = np.array(terminal)
+            density = self.agent.exploration_model.update(obs, action, next_obs, re, terminal, False)
+        else:
+            density = self.agent.exploration_model.forward_np(obs)
         density = density.reshape(ii.shape)
         plt.imshow(density[::-1])
         plt.colorbar()
         plt.title('RND Value')
         self.fig.savefig(filepath('rnd_value'), bbox_inches='tight')
+        if itr == 10000:
+            file = filepath('rnd_value')
+            self.fig.savefig(file[:-4] + '_10000' + file[-4:], bbox_inches='tight')
 
         plt.clf()
         exploitation_values = self.agent.exploitation_critic.qa_values(obs).mean(-1)
@@ -419,6 +438,9 @@ class RL_Trainer(object):
         plt.colorbar()
         plt.title('Predicted Exploitation Value')
         self.fig.savefig(filepath('exploitation_value'), bbox_inches='tight')
+        if itr == 10000:
+            file = filepath('exploitation_value')
+            self.fig.savefig(file[:-4] + '_10000' + file[-4:], bbox_inches='tight')
 
         plt.clf()
         exploration_values = self.agent.exploration_critic.qa_values(obs).mean(-1)
@@ -427,3 +449,6 @@ class RL_Trainer(object):
         plt.colorbar()
         plt.title('Predicted Exploration Value')
         self.fig.savefig(filepath('exploration_value'), bbox_inches='tight')
+        if itr == 10000:
+            file = filepath('exploration_value')
+            self.fig.savefig(file[:-4] + '_10000' + file[-4:], bbox_inches='tight')

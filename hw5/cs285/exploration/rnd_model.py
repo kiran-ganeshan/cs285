@@ -33,28 +33,35 @@ class RNDModel(nn.Module, BaseExplorationModel):
             self.f_hat.parameters(),
             **self.optimizer_spec.optim_kwargs
         )
+        self.learning_rate_scheduler = optim.lr_scheduler.LambdaLR(
+            self.optimizer,
+            self.optimizer_spec.learning_rate_schedule,
+        )
 
     def forward(self, ob_no):
         target = self.f(ob_no)
         pred = self.f_hat(ob_no)
-        print(f'\n\nob_no.shape: {ob_no.shape}\nob_no[:5, :]: {ob_no[:5, :]}')
-        print(f'pred.shape: {pred.shape}\npred[:5, :]: {pred[:5, :]}')
-        print(f'target.shape: {target.shape}\ntarget[:5, :]: {target[:5, :]}')
-        error = torch.norm(pred - target.detach(), dim=-1)
-        print(f'error.shape: {error.shape}\nerror[:5]: {error[:5]}')
-        return error
+        # assert pred.shape == target.shape
+        # print(f'\n\nob_no.shape: {ob_no.shape}\nob_no[:5, :]: {ob_no[:5, :]}')
+        # print(f'pred.shape: {pred.shape}\npred[:5, :]: {pred[:5, :]}')
+        # print(f'target.shape: {target.shape}\ntarget[:5, :]: {target[:5, :]}')
+        error_loss = torch.norm(pred - target.detach(), dim=1)
+        # assert error_loss.shape == pred.shape[:1 ]
+        # print(f'error.shape: {error_loss.shape}\nerror[:5]: {error_loss[:5]}')
+        return error_loss
 
     def forward_np(self, ob_no):
         ob_no = ptu.from_numpy(ob_no)
-        error = self(ob_no)
-        return ptu.to_numpy(error)
+        error_loss = self(ob_no)
+        return ptu.to_numpy(error_loss)
 
     def update(self, ob_no):
         # <DONE>: Update f_hat using ob_no
         ob_no = ptu.from_numpy(ob_no)
-        error = self(ob_no).mean()
+        error_loss = self(ob_no).mean()
         self.optimizer.zero_grad()
-        error.backward()
+        error_loss.backward()
         self.optimizer.step()
-        error = ptu.to_numpy(error)
-        return error
+        self.learning_rate_scheduler.step()
+        error_loss = ptu.to_numpy(error_loss)
+        return {'Training Loss': error_loss.item()}
