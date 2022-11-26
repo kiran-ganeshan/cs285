@@ -143,7 +143,7 @@ class AWACAgent(DQNAgent):
             # Logging #
             log['Exploration Critic Loss'] = exploration_critic_loss['Training Loss']
             log['Exploitation Critic Loss'] = exploitation_critic_loss['Training Loss']
-            log['Exploration Model Loss'] = expl_model_loss
+            log['Exploration Model Loss'] = expl_model_loss['Training Loss']
 
             # Uncomment these lines after completing awac
             log['Actor Loss'] = actor_loss
