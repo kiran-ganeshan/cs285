@@ -37,6 +37,7 @@ class RNDModel(nn.Module, BaseExplorationModel):
             self.optimizer,
             self.optimizer_spec.learning_rate_schedule,
         )
+        self.denom = torch.sqrt(torch.tensor(self.output_size).float())
 
     def forward(self, ob_no):
         target = self.f(ob_no)
@@ -45,7 +46,7 @@ class RNDModel(nn.Module, BaseExplorationModel):
         # print(f'\n\nob_no.shape: {ob_no.shape}\nob_no[:5, :]: {ob_no[:5, :]}')
         # print(f'pred.shape: {pred.shape}\npred[:5, :]: {pred[:5, :]}')
         # print(f'target.shape: {target.shape}\ntarget[:5, :]: {target[:5, :]}')
-        error_loss = torch.norm(pred - target.detach(), dim=1)
+        error_loss = torch.norm(pred - target.detach(), dim=1) / self.denom
         # assert error_loss.shape == pred.shape[:1 ]
         # print(f'error.shape: {error_loss.shape}\nerror[:5]: {error_loss[:5]}')
         return error_loss

@@ -452,3 +452,5 @@ class RL_Trainer(object):
         if itr == 10000:
             file = filepath('exploration_value')
             self.fig.savefig(file[:-4] + '_10000' + file[-4:], bbox_inches='tight')
+            
+        plt.close('all')

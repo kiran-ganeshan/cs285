@@ -50,7 +50,7 @@ class AWACAgent(DQNAgent):
 
     def get_qvals(self, critic, obs, action):
         # get q-value for a given critic, obs, and action
-        return torch.gather(critic.qa_values(obs), 1, action)
+        return torch.gather(critic.q_net(obs), 1, action.unsqueeze(1)).squeeze(1)
 
     def estimate_advantage(self, ob_no, ac_na, re_n, next_ob_no, terminal_n, n_actions=10):
         # TODO: Calculate and return the advantage (n sample estimate) 
@@ -62,25 +62,24 @@ class AWACAgent(DQNAgent):
         terminal_n = ptu.from_numpy(terminal_n)
 
         # HINT: store computed values in the provided vals list. You will use the average of this list for calculating the advantage.
-        vals = []
+        # vals = []
         # TODO: get action distribution for current obs, you will use this for the value function estimate
-        dist = self.actor(ob_no)
+        # dist = self.actor(ob_no)
         # TODO Calculate Value Function Estimate given current observation
         # HINT: You may find it helpful to utilze get_qvals defined above
-        if self.agent_params['discrete']:
-            for i in range(self.agent_params['ac_dim']):
-                ac = torch.tensor(i).to(torch.long).unsqueeze().repeat(ob_no.shape[0])
-                vals.append(self.get_qvals(self.actor.critic, ob_no, ac))
-        else:
-            for _ in range(n_actions):
-                ac = dist.sample()
-                vals.append(self.get_qvals(self.actor.critic, ob_no, ac))
-        v_pi = np.mean(vals)
+        # if self.agent_params['discrete']:
+        #     vals.append((self.actor.critic.qa_values(ob_no) * dist.probs).sum(-1))
+        # else:
+        #     for _ in range(n_actions):
+        #         ac = dist.sample()
+        #         vals.append(self.get_qvals(self.actor.critic, ob_no, ac))
+        # v_pi = np.mean(np.stack(vals, -1), -1)
+        v_pi = (self.actor.critic.q_net(ob_no) * self.eval_policy(ob_no).probs).sum(-1)
 
         # TODO Calculate Q-Values
-        q_vals = self.get_qvals(self.actor.critic, ob_no, ac)
+        q_vals = self.get_qvals(self.actor.critic, ob_no, ac_na)
         # TODO Calculate the Advantage using q_vals and v_pi  
-        return q_vals - v_pi
+        return (q_vals - v_pi).detach()
 
     def train(self, ob_no, ac_na, re_n, next_ob_no, terminal_n):
         log = {}
